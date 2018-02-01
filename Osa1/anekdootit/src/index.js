@@ -17,7 +17,6 @@ class App extends React.Component {
     }
 
     addVote = (number) => {
-        console.log(this.findMostPopular())
         return () => {
             let copy = [...this.state.votes]
             copy[number] += 1
