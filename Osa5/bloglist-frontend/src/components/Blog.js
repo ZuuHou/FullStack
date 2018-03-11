@@ -13,13 +13,38 @@ class Blog extends React.Component {
     super(props)
     this.state = {
       allVisible: false,
-      blog: this.props.blog
+      blog: this.props.blog,
+      comment: ''
     }
   }
 
   toggleVisible = () => {
     this.setState({
       allVisible: this.state.allVisible === true ? false : true
+    })
+  }
+
+  handleChange = (event) => {
+    this.setState({ [event.target.name]: event.target.value })
+  }
+
+  handleSubmit = async () => {
+
+    console.log('submitted')
+    const blog = this.state.blog
+    const blogObject = {
+      title: blog.title,
+      author: blog.author,
+      url: blog.url,
+      comments: blog.comments.concat(this.state.comment)
+    }
+
+    const updatedBlog = await blogService.update(blog._id, blogObject)
+    console.log(this.state.comment)
+    this.props.newComment(this.state.comment)
+    this.setState({
+      blog: updatedBlog,
+      comment: ''
     })
   }
 
@@ -60,7 +85,7 @@ class Blog extends React.Component {
     const user = this.props.user
     const blogUser = this.props.blog.user
     const addedBy = blogUser === null ? 'Ei tiedossa' : blogUser.name === undefined ? blogUser.username : blogUser.name
-    const deleteButton = this.props.blog.user.username === user.username ? <button onClick={this.deleteBlog}>Poista</button> : this.props.blog.user === null ? <button onClick={this.deleteBlog}>delete</button> : null
+    //    const deleteButton = this.props.blog.user.username === user.username ? <button onClick={this.handleDelete}>Poista</button> : this.props.blog.user === null ? <button onClick={this.handleDelete}>delete</button> : null
 
     return (
       <div className="content" style={blogStyle}>
@@ -69,12 +94,17 @@ class Blog extends React.Component {
         </div>
         <div className="extendedContent" style={showWhenVisible}>
           <p onClick={this.toggleVisible}>{this.state.blog.title} {this.state.blog.author}</p>
-          <a>{this.state.blog.url}</a>
+          <a href={this.state.blog.url}>{this.state.blog.url}</a>
           <p>{this.state.blog.likes}
             <button onClick={this.handleLike}>Like</button>
           </p>
           <p>Lisännyt: {addedBy}</p>
-          {deleteButton}
+          <h4>comments</h4>
+          {this.state.blog.comments.map(comment => <p>{comment}</p>)}
+          <form onSubmit={this.handleSubmit}>
+            <input name='comment' value={this.state.comment} onChange={this.handleChange} />
+            <button type="submit">Kommentoi</button>
+          </form>
         </div>
       </div>
     )

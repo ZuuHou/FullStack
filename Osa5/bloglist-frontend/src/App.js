@@ -1,27 +1,36 @@
 import React from 'react'
+import Notification from './components/Notification'
+import UserList from './components/UserList'
+import Home from './components/Home'
 import Blog from './components/Blog'
-import BlogForm from './components/BlogForm'
+import Menu from './components/Menu'
+import User from './components/User'
 import LoginForm from './components/LoginForm'
 import Togglable from './components/Togglable'
-import Notification from './components/Notification'
+import BlogForm from './components/BlogForm'
+import userService from './services/users'
 import blogService from './services/blogs'
 import loginService from './services/login'
+import { BrowserRouter as Router, Route } from 'react-router-dom'
 
 class App extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      blogs: [],
-      newBlog: '',
       notification: null,
       error: false,
-      username: '',
-      password: '',
       user: null,
+      users: [],
+      blogs: [],
+      username: '',
+      password: ''
     }
   }
 
   async componentDidMount() {
+    const users = await userService.getAll()
+    this.setState({ users })
+
     const blogs = await blogService.getAll()
     blogs.sort(function (a, b) {
       return b.likes - a.likes
@@ -34,6 +43,22 @@ class App extends React.Component {
       this.setState({ user })
       blogService.setToken(user.token)
     }
+  }
+  handleLoginFieldChange = (event) => {
+    this.setState({ [event.target.name]: event.target.value })
+  }
+
+  logout = async (event) => {
+    event.preventDefault()
+    window.localStorage.removeItem('loggedBlogappUser')
+    this.setState({
+      user: null,
+      notification: 'Loggasit ulos'
+    })
+    setTimeout(() => {
+      this.setState({ notification: null })
+    }, 5000)
+
   }
 
   login = async (event) => {
@@ -73,21 +98,15 @@ class App extends React.Component {
     }
   }
 
-  logout = async (event) => {
-    event.preventDefault()
-    window.localStorage.removeItem('loggedBlogappUser')
+  newComment = async (props) => {
+    const blogs = await blogService.getAll()
     this.setState({
-      user: null,
-      notification: 'Loggasit ulos'
+      blogs,
+      notification: `Lisäsit kommentin "${props.title}"`
     })
     setTimeout(() => {
       this.setState({ notification: null })
     }, 5000)
-
-  }
-
-  handleLoginFieldChange = (event) => {
-    this.setState({ [event.target.name]: event.target.value })
   }
 
   newBlog = async (props) => {
@@ -104,22 +123,16 @@ class App extends React.Component {
     }, 5000)
   }
 
-  deleteBlogFromBlogs = (props) => {
-    this.setState({
-      blogs: this.state.blogs.filter(blog => blog._id !== props._id),
-      notification: `Kirjoittajan ${props.author} blogi "${props.title}" poistettu`
-    })
-    setTimeout(() => {
-      this.setState({ notification: null, error: false })
-    }, 5000)
-  }
+  userById = (id) => (
+    this.state.users.find(u => u.id === id))
+
+  blogById = (id) => (
+    this.state.blogs.find(b => b._id === id))
 
   render() {
-
     if (this.state.user === null) {
       return (
         <div className="loginContent">
-          <Notification message={this.state.notification} error={this.state.error} />
           <Togglable buttonLabel='Kirjaudu'>
             <LoginForm
               username={this.state.username}
@@ -131,25 +144,34 @@ class App extends React.Component {
         </div>
       )
     }
+
     return (
       <div className="appContent">
-        <h1> Blogs </h1>
-
-        <Notification message={this.state.notification} error={this.state.error} />
-
-        {this.state.user !== null &&
+        <Router>
           <div>
-            <p>{this.state.user.name} logged in
-            <button onClick={this.logout}>Ulostaudu</button></p>
-            <Togglable buttonLabel='Uusi Blogi' ref={component => this.blogForm = component}>
-              <BlogForm newBlog={this.newBlog} />
-            </Togglable>
+            <div>
+              <Menu user={this.state.user} logout={this.logout} />
+            </div>
+            <h1>Blog App </h1>
+            <Notification message={this.state.notification} error={this.state.error} />
+            {this.state.user !== null &&
+              <div>
+                <Togglable buttonLabel='Uusi Blogi' ref={component => this.blogForm = component}>
+                  <BlogForm newBlog={this.newBlog} />
+                </Togglable>
+              </div>
+            }
+            <Route exact path="/" render={() => <Home user={this.state.user} blogs={this.state.blogs} login={this.login} />} />
+            <Route exact path="/users" render={() => <UserList users={this.state.users} />} />
+            <Route exact path="/users/:id" render={({ match }) =>
+              <User user={this.userById(match.params.id)} />
+            } />
+            <Route exact path="/blogs/:id" render={({ match }) =>
+              <Blog blog={this.blogById(match.params.id)} newComment={this.newComment} />
+            } />
           </div>
-        }
 
-        {this.state.blogs.map(blog =>
-          <Blog key={blog._id} blog={blog} user={this.state.user} remove={this.deleteBlogFromBlogs} />
-        )}
+        </Router>
       </div>
     );
   }

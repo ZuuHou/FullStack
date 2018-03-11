@@ -21,7 +21,7 @@ class BlogForm extends React.Component {
         const blogObject = {
             title: this.state.title,
             author: this.state.author,
-            url: this.state.url
+            url: this.state.url,
         }
         this.setState({
             title: '',
