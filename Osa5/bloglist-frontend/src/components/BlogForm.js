@@ -1,5 +1,6 @@
 import React from 'react'
 import blogService from '../services/blogs'
+import { Form } from 'semantic-ui-react'
 
 class BlogForm extends React.Component {
     constructor(props) {
@@ -38,33 +39,26 @@ class BlogForm extends React.Component {
             <div>
                 <h2>Luo uusi blogi</h2>
 
-                <form onSubmit={this.handleSubmit}>
-                    <div>
-                        Title
-                        <input
+                <Form onSubmit={this.handleSubmit}>
+                    <Form.Group widths='equal'>
+                        <Form.Input fluid label='Title'
                             value={this.state.title}
                             onChange={this.handleChange}
                             name='title'
                         />
-                    </div>
-                    <div>
-                        Author
-                        <input
+                        <Form.Input fluid label='Author'
                             value={this.state.author}
                             onChange={this.handleChange}
                             name='author'
                         />
-                    </div>
-                    <div>
-                        Url
-                        <input
+                        <Form.Input fluid label='Url'
                             value={this.state.url}
                             onChange={this.handleChange}
                             name='url'
                         />
-                    </div>
-                    <button type="submit">Lisää</button>
-                </form>
+                        </Form.Group>
+                    <Form.Button>Lisää</Form.Button>
+                </Form>
             </div>
         )
     }
