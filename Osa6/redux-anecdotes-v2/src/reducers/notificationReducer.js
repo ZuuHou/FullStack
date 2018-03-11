@@ -1,33 +1,25 @@
 const notificationReducer = (store = '', action) => {
     switch (action.type) {
-        case 'ANECVOTED':
-            return `"${action.message}" voted`
-        case 'ANECCREATED':
-            return `new anecdote "${action.message}" created`
-        case 'RESET':
-            return ''
+        case 'SET_NOTIFICATION':
+            return action.message
         default:
             return store
     }
 }
 
-export const setVotedNotification = (message) => {
-    return {
-        type: 'ANECVOTED',
-        message: message
-    }
-}
+export const setNotification = (message, seconds) => {
+    return async (dispatch) => {
+        dispatch({
+            type: 'SET_NOTIFICATION',
+            message
+        })
+        await setTimeout(() => {
+            dispatch({
+                type: 'SET_NOTIFICATION',
+                message: ''
+            })
+        }, seconds * 1000)
 
-export const setCreatedNotification = (message) => {
-    return {
-        type: 'ANECCREATED',
-        message: message
-    }
-}
-
-export const resetNotification = (message) => {
-    return {
-        type: 'RESET'
     }
 }
 
